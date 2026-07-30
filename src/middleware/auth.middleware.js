@@ -1,20 +1,17 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/users.model");
 
-// Middleware to check if user is logged in
-const authenticate = (req, res, next) => {
+const authenticate = async (req, res, next) => {
   try {
     let token;
 
-    // Check if token is in the Authorization header
     if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
       token = req.headers.authorization.split(" ")[1];
     }
-    // Check if token is in cookies
     else if (req.cookies && req.cookies.token) {
       token = req.cookies.token;
     }
 
-    // If no token found, reject request
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -22,8 +19,16 @@ const authenticate = (req, res, next) => {
       });
     }
 
-    // Verify the token and attach user data to request
     let decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User no longer exists",
+      });
+    }
+
     req.user = decoded;
     next();
   } catch (error) {
