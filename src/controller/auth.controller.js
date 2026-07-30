@@ -35,16 +35,18 @@ const userRegister = async (req, res) => {
 
     const token = generateToken(user);
 
+    const isProd = process.env.NODE_ENV === "production";
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProd,
+      sameSite: isProd ? "strict" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     res.status(201).json({
       success: true,
       message: "Registration successful",
+      token,
       user: {
         id: user._id,
         name: user.name,
@@ -88,16 +90,18 @@ const userLogin = async (req, res) => {
 
     const token = generateToken(user);
 
+    const isProd = process.env.NODE_ENV === "production";
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProd,
+      sameSite: isProd ? "strict" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     res.status(200).json({
       success: true,
       message: "Login successful",
+      token,
       user: {
         id: user._id,
         name: user.name,
@@ -142,10 +146,11 @@ const getMe = async (req, res) => {
 };
 
 const logout = async (req, res) => {
+  const isProd = process.env.NODE_ENV === "production";
   res.cookie("token", "", {
     httpOnly: true,
-    secure: true,
-    sameSite: "none",
+    secure: isProd,
+    sameSite: isProd ? "strict" : "lax",
     expires: new Date(0),
   });
   res.status(200).json({
